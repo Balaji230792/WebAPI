@@ -1,4 +1,8 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using WebAPI.Middlewares;
 using WebAPI.Models;
 using WebAPI.Services;
@@ -13,11 +17,33 @@ builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var jwtAuthenticationScheme = builder.Configuration.GetSection("JWTAuthenticationScheme").Get<JWTAuthenticationScheme>();
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtAuthenticationScheme?.ValidIssuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtAuthenticationScheme?.ValidAudience,
+
+            ValidateLifetime = true,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthenticationScheme?.SecretKey)),
+
+        };
+    });
+
 // Add Services 
 builder.Services.AddSingleton<ITransactionService, TransactionsService>();
 
 // Adding Configuration service to Model
 builder.Services.Configure<ApiCredentials>(builder.Configuration.GetSection("ApiCredentials"));
+builder.Services.Configure<JWTAuthenticationScheme>(builder.Configuration.GetSection("JWTAuthenticationScheme"));
 
 var app = builder.Build();
 
@@ -29,10 +55,11 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middlewares
-app.UseMiddleware<BasicAuthMiddleware>();
+// app.UseMiddleware<BasicAuthMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
