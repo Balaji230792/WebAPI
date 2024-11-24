@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -16,18 +17,18 @@ namespace WebAPI.Controllers
         private readonly JWTAuthenticationScheme _jwtAuthenticationScheme = jwtAuthenticationScheme.Value;
 
         [HttpPost("login")]
-        public IActionResult Login([FromQuery]string username,[FromQuery] string password)
+        public IActionResult Login([FromBody]ApiCredentials apiCredentials)
         {
-            //if(username != "xyz" || password != "abc")
-            //{
-            //    return Unauthorized();
-            //}
+            if (apiCredentials.UserName != "admin" || apiCredentials.Password != "1234")
+            {
+                return Unauthorized();
+            }
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(JwtRegisteredClaimNames.Sub, apiCredentials.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Role, "User")
+                new Claim(ClaimTypes.Role, "admin")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtAuthenticationScheme.SecretKey));

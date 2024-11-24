@@ -41,6 +41,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Add Services 
 builder.Services.AddSingleton<ITransactionService, TransactionsService>();
 
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Adding Configuration service to Model
 builder.Services.Configure<ApiCredentials>(builder.Configuration.GetSection("ApiCredentials"));
 builder.Services.Configure<JWTAuthenticationScheme>(builder.Configuration.GetSection("JWTAuthenticationScheme"));
@@ -53,9 +64,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("AllowAllOrigins");
 
 // Middlewares
-// app.UseMiddleware<BasicAuthMiddleware>();
+app.UseMiddleware<BasicAuthMiddleware>();
+
 
 app.UseHttpsRedirection();
 
