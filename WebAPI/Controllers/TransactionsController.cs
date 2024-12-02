@@ -5,7 +5,7 @@ using WebAPI.Services;
 
 namespace WebAPI.Controllers
 {
-    [Route("api/transactions")] xvg
+    [Route("api/transactions")] 
     [ApiController]
     public class TransactionsController(ITransactionService transactionService) : ControllerBase
     {
